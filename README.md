@@ -1,0 +1,1 @@
+﻿Aquest es l'examen del minimo 1, fet per Meritxell Basart
