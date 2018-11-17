@@ -22,17 +22,19 @@ public class BikesService {
     private MyBike tm;
 
 
-    public BikesService() throws Exception {
+    public BikesService() {
         this.tm = MyBikeImpl.getInstance();
         this.tm.addUser("user1", "Juan", "Lopex");
         this.tm.addStation("Station1","description:: station1", 10, 3, 3);
         this.tm.addStation("Station2","description:: station2", 10, 3, 3);
-        this.tm.addBike("bike101", "descripton", 25.45, "Station1");
-        this.tm.addBike("bike102", "descripton", 70.3, "Station1");
-        this.tm.addBike("bike103", "descripton", 10.2, "Station1");
-        this.tm.addBike("bike201", "descripton", 1325.45, "Station2");
-        this.tm.addBike("bike202", "descripton", 74430.3, "Station2");
-        this.tm.addBike("bike203", "descripton", 1320.2, "Station2");
+        try {
+            this.tm.addBike("bike101", "descripton", 25.45, "Station1");
+            this.tm.addBike("bike102", "descripton", 70.3, "Station1");
+            this.tm.addBike("bike103", "descripton", 10.2, "Station1");
+            this.tm.addBike("bike201", "descripton", 1325.45, "Station2");
+            this.tm.addBike("bike202", "descripton", 74430.3, "Station2");
+            this.tm.addBike("bike203", "descripton", 1320.2, "Station2");
+        } catch(Exception e){}
     }
 
     //coses per les bicis
@@ -41,11 +43,11 @@ public class BikesService {
     @ApiResponses(value = {
             @ApiResponse(code = 201, message = "Successful", response= User.class),
     })
-    @Path("/")
+    @Path("/newUser/{idUser}/{name}/{surname}")
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response newUser(String idUser, String name, String surname) {
+    public Response newUser(@PathParam("idUser") String idUser,@PathParam("name") String name, @PathParam("surname") String surname) {
         this.tm.addUser(idUser,name,surname);
-        return Response.status(201).entity(idUser).build();
+        return Response.status(201).build();
     }
 
     @POST
@@ -53,11 +55,11 @@ public class BikesService {
     @ApiResponses(value = {
             @ApiResponse(code = 201, message = "Successful", response= Station.class),
     })
-    @Path("/")
+    @Path("/newStation/{idStation}/{description}/{max}/{lat}/{lon}")
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response newStation(String idStation, String description, int max, double lat, double lon) {
+    public Response newStation(@PathParam("idStation") String idStation,@PathParam("description") String description, @PathParam("max") int max, @PathParam("lat") double lat, @PathParam("lon") double lon) {
         this.tm.addStation(idStation,description,max,lat,lon);
-        return Response.status(201).entity(idStation).build();
+        return Response.status(201).build();
     }
 
     @POST
@@ -65,11 +67,15 @@ public class BikesService {
     @ApiResponses(value = {
             @ApiResponse(code = 201, message = "Successful", response= Bike.class),
     })
-    @Path("/")
+    @Path("/newBike/{idBike}/{description}/{kms}/{idStation}")
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response newBike(String idBike, String description, double kms, String idStation) throws Exception{
-        this.tm.addBike(idBike,description,kms,idStation);
-        return Response.status(201).entity(idStation).build();
+    public Response newBike(@PathParam("idBike") String idBike,@PathParam("description") String description, @PathParam("kms") double kms, @PathParam("idStation") String idStation){
+        try {
+            this.tm.addBike(idBike, description, kms, idStation);
+            return Response.status(201).build();
+        }catch (Exception e) {
+            return Response.status(404).build();
+        }
     }
 
     @GET
@@ -77,13 +83,16 @@ public class BikesService {
     @ApiResponses(value = {
             @ApiResponse(code = 201, message = "Successful", response = Bike.class, responseContainer="List"),
     })
-    @Path("/{name}")
+    @Path("/getBikesKms/{name}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getBikesKms(@PathParam("name") String name) throws Exception {
-
-        List<Bike> bikes = this.tm.bikesByStationOrderByKms(name);
-        GenericEntity<List<Bike>> entity = new GenericEntity<List<Bike>>(bikes) {};
-        return Response.status(201).entity(entity).build()  ;
+    public Response getBikesKms(@PathParam("name") String name) {
+        try {
+            List<Bike> bikes = this.tm.bikesByStationOrderByKms(name);
+            GenericEntity<List<Bike>> entity = new GenericEntity<List<Bike>>(bikes) {};
+            return Response.status(201).entity(entity).build();
+        }catch (Exception e){
+            return Response.status(404).build();
+        }
 
     }
 
@@ -92,12 +101,34 @@ public class BikesService {
     @ApiResponses(value = {
             @ApiResponse(code = 201, message = "Successful", response = Bike.class, responseContainer="List"),
     })
-    @Path("/{stationId}/{userId}")
+    @Path("/getFirstBike/{stationId}/{userId}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getFirstBike(@PathParam("stationId") String stationId,@PathParam("userId") String userId) throws Exception {
+    public Response getFirstBike(@PathParam("stationId") String stationId,@PathParam("userId") String userId) {
+        try {
+            Bike bike = this.tm.getBike(stationId, userId);
+            return Response.status(201).entity(bike).build();
+        }catch (Exception e){
+            return Response.status(404).build();
+        }
+    }
 
-        Bike bike = this.tm.getBike(stationId,userId);
-        return Response.status(201).entity(bike).build()  ;
+    @GET
+    @ApiOperation(value = "get all bikes ordered by kms", notes = "asdasd")
+    @ApiResponses(value = {
+            @ApiResponse(code = 201, message = "Successful", response = Bike.class, responseContainer="List"),
+    })
+    @Path("/getBikesUser/{name}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getBikesUser(@PathParam("name") String name) {
+        try {
+            List<Bike> bikes = this.tm.bikesByUser(name);
+            GenericEntity<List<Bike>> entity = new GenericEntity<List<Bike>>(bikes) {};
+            return Response.status(201).entity(entity).build();
+        }catch (Exception e){
+            return Response.status(404).build();
+        }
 
     }
+
+
 }
