@@ -74,6 +74,12 @@ public class Station {
         return bikeList;
     }
 
+    public Bike getBikeOfStation(){
+        Bike bike = bikeList.get(0);
+        bikeList.remove(0);
+        return bike;
+    }
+
     public void setBikeList(List<Bike> bikeList) {
         this.bikeList = bikeList;
     }

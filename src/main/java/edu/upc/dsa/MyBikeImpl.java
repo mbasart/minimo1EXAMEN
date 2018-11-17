@@ -1,6 +1,5 @@
 package edu.upc.dsa;
 
-import com.sun.org.apache.xml.internal.utils.StringComparable;
 import org.apache.log4j.Logger;
 
 import java.util.*;
@@ -11,12 +10,14 @@ public class MyBikeImpl implements MyBike {
 
     private Map<String, User> userMap;
     Station[] stations;
+    private int sizeArr;
 
     final Logger log = Logger.getLogger(MyBikeImpl.class);
 
     private MyBikeImpl() {
         this.userMap = new HashMap<String, User>();
         this.stations = new Station[10];
+        this.sizeArr =0;
     }
 
     public static MyBike getInstance() {
@@ -27,22 +28,29 @@ public class MyBikeImpl implements MyBike {
     //afegir coses
     public void addUser (String idUser, String name, String surname){
         User user = new User(idUser,name,surname);
-        userMap.put(user.getName(), user);
+        userMap.put(user.getIdUser(), user);
+        log.info("Nom del usuari: "+name);
     }
 
     public void addStation(String idStation, String description, int max, double lat, double lon){
         Station station = new Station(idStation,description,max,lat,lon);
-        for(int i1 = 0; i1 < stations.length; i1++){
-            stations[i1] = station;
+        int pos2 =0;
+        int cont =0;
+        while (stations[pos2] != null){
+            cont++;
+            pos2++;
         }
+        stations[cont]=station;
+        sizeArr++;
+
     }
 
     public void addBike(String idBike, String description, double kms, String idStation) throws StationFullException, StationNotFoundException{
         boolean encont = false;
         int i = 0;
         String stat = null;
-        while(!encont && i < stations.length){
-            if(idStation.equals(stations[i].getIdStation())){
+        while(!encont && i < sizeArr){
+            if(stations[i].getIdStation().equals((idStation))){
                 encont = true;
                 stat = idStation;
             }else
@@ -50,13 +58,13 @@ public class MyBikeImpl implements MyBike {
         }
         if(stat == null){
             log.error("This station not exist");
-            throw new StationNotFoundException();
+            throw new StationNotFoundException("Estacio no trobada");
         }else{
-            if(stations[i].getMax() <= 10){
+            if(stations[i].getMax() > stations[i].getBikeList().size()){
                 this.stations[i].addBikeStation(idBike,description,kms,idStation);
             }else{
                 log.error("Error! Station full");
-                throw new StationFullException();
+                throw new StationFullException("L estacio esta plena");
             }
         }
     }
@@ -69,8 +77,8 @@ public class MyBikeImpl implements MyBike {
         boolean encont = false;
         int i = 0;
         String stat = null;
-        while(!encont && i < stations.length){
-            if(idStation.equals(stations[i].getIdStation())){
+        while(!encont && i < sizeArr){
+            if(stations[i].getIdStation().equals((idStation))){
                 encont = true;
                 stat = idStation;
             }else
@@ -78,11 +86,12 @@ public class MyBikeImpl implements MyBike {
         }
         if (stat == null){
             log.error("This station not exist");
-            throw new StationNotFoundException();
+            throw new StationNotFoundException("Estacio no trobada");
         } else {
             List<Bike> bikesOrderedKms = new LinkedList<Bike>();
             for (Bike bike : stations[i].getBikeList()) {
                 bikesOrderedKms.add(bike);
+                log.info("Nom de la bici: " + bike.getBikeId());
             }
             Collections.sort(bikesOrderedKms, (o1, o2) -> (int) (o1.getKms() - o2.getKms()));
             return bikesOrderedKms;
@@ -95,8 +104,8 @@ public class MyBikeImpl implements MyBike {
         boolean encont = false;
         int i = 0;
         String stat = null;
-        while(!encont && i < stations.length){
-            if(stationId.equals(stations[i].getIdStation())){
+        while(!encont && i < sizeArr){
+            if(stations[i].getIdStation().equals((stationId))){
                 encont = true;
                 stat = stationId;
             }else
@@ -105,14 +114,16 @@ public class MyBikeImpl implements MyBike {
 
         if (stat == null){
             log.error("This station not exist");
-            throw new StationNotFoundException();
+            throw new StationNotFoundException("Estacio no trobada");
         }else{
             User user = this.userMap.get(userId);
             if(user == null){
                 log.error("Error! usuari no existeix");
-                throw new UserNotFoundException();
+                throw new UserNotFoundException("Usuari no trobat");
             } else {
-                bike = stations[i].getBikeList().get(0);
+                Bike bike2 = stations[i].getBikeOfStation();
+                user.addBikeUser2(bike2);
+                bike = bike2;
             }
         }
 
@@ -125,7 +136,7 @@ public class MyBikeImpl implements MyBike {
         List<Bike> bikesList;
         if(user == null){
             log.error("Error! usuari no existeix");
-            throw new UserNotFoundException();
+            throw new UserNotFoundException("Usuari no trobat");
         }else{
             bikesList = this.userMap.get(userId).getBikeList();
         }
@@ -134,14 +145,19 @@ public class MyBikeImpl implements MyBike {
 
     public int numUsers(){
         log.info("Number of users: ");
-        int numU = this.userMap.size();
+        int numU = userMap.size();
         return  numU;
     }
 
     public int numStations(){
         log.info("number of stations: ");
-        int numStations = this.stations.length;
-        return numStations;
+        int cont=0;
+        for (int i = 0; i< stations.length; i++){
+            if(stations[i] != null){
+                cont++;
+            }
+        }
+        return cont;
     }
 
     public int numBikes(String idStation) throws StationNotFoundException{
@@ -150,7 +166,7 @@ public class MyBikeImpl implements MyBike {
         boolean encont = false;
         int i = 0;
         String stat = null;
-        while(!encont && i < stations.length){
+        while(!encont && i < sizeArr){
             if(idStation.equals(stations[i].getIdStation())){
                 encont = true;
                 stat = idStation;
@@ -159,7 +175,7 @@ public class MyBikeImpl implements MyBike {
         }
         if (stat == null){
             log.error("This station not exist");
-            throw new StationNotFoundException();
+            throw new StationNotFoundException("Estacio no trobada");
         } else{
             numBikes = stations[i].getBikeList().size();
         }

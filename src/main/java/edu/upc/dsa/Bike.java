@@ -15,9 +15,10 @@ public class Bike {
         this.idBike = idBike;
         this.description = description;
         this.kms = kms;
+        this.idStation = idStation;
     }
 
-    public String getIdBike() {
+    public String getBikeId() {
         return idBike;
     }
 
@@ -41,7 +42,7 @@ public class Bike {
         this.kms = kms;
     }
 
-    public String getBikeId() {
+    public String getIdStation() {
         return idStation;
     }
 

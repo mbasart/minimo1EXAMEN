@@ -57,4 +57,8 @@ public class User {
         this.bikeList.add(b);
 
     }
+
+    public void addBikeUser2 (Bike bike){
+        this.bikeList.add(bike);
+    }
 }
